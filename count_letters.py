@@ -14,11 +14,10 @@
 #   stats (e.g., number of characters, number of words, number of lines, etc.)
 
 import argparse
-from collections import Counter
 import string
 import time
 
-def skip_preamble(file_path):
+def skip_preamble(text):
 
     start_marker = "*** START OF THE PROJECT GUTENBERG***"
     end_marker = "*** END OF THE PROJECT GUTENBERG***"
@@ -35,17 +34,14 @@ def skip_preamble(file_path):
     
     return text[start:end]
 
-def basic_stats(file_path):
+def basic_stats(text):
 
-    with open(file_path, 'r', encoding='utf-8') as f:
-        text = f.read()
-
-    num_lines = len(text.splitlines()) # Total lines
-    num_words = len(text.split()) # Total words
-    num_chars = len(text) # Total letters + non-letters
+    lines = len(text.splitlines()) # Total lines
+    words = len(text.split()) # Total words
+    chars = len(text) # Total letters + non-letters
     letters = sum(1 for c in text if c.isalpha()) # Total letters
 
-    return num_lines, num_words, num_chars, letters
+    return lines, words, chars, letters
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
@@ -56,28 +52,51 @@ def parse_arguments():
         type=str,
         help="Path to the input text file"
     )
+    parser.add_argument(
+        "--skip-preamble",
+        action="store_true",
+        help="Skip the preamble and license sections of the text"
+    )
+    parser.add_argument(
+        "--stats",
+        action="store_true",
+        help="Print basic statistics of the text"
+    )
     return parser.parse_args()
 
-def count_letters(file_path):
+def count_letters():
+    args = parse_arguments()
+    start_time = time.time()
 
+    with open(args.file_path, 'r', encoding='utf-8') as f:
+        text = f.read()
+        if args.skip_preamble:
+            text = skip_preamble(text)
+        if args.stats:
+            lines, words, chars, letters = basic_stats(text)
+            print(f"Lines: {lines}, Words: {words}, Characters: {chars}, Letters: {letters}")
+    
     uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     lowercase = 'abcdefghijklmnopqrstuvwxyz'
-
     counts = [0] * len(uppercase)
 
-    with open(file_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            for char in line:
-                if char in uppercase:
-                    counts[uppercase.index(char)] += 1
-                elif char in lowercase:
-                    counts[lowercase.index(char)] += 1
+    for line in text:
+        for char in line:
+            if char in uppercase:
+                counts[uppercase.index(char)] += 1
+            elif char in lowercase:
+                counts[lowercase.index(char)] += 1
     
-    num_lines, num_words, num_chars, letters = basic_stats(file_path)
-    frequencies = counts / letters
+    letters = sum(counts)
+    frequencies = [100.0 * count / letters for count in counts]
 
     for i in range(len(uppercase)):
             print((uppercase[i]), lowercase[i], frequencies[i])
+    
+    print(f"Check sum of frequencies: {sum(frequencies):.2f}%")
+    
+    elapsed_time = time.time() - start_time
+    print(f"Elapsed time: {elapsed_time:.2f} seconds")
 
-if __name__ == "__main__":
-    count_letters(file_path)
+if __name__ == "__main__":  # Replace with the actual file path
+    count_letters()
