@@ -107,18 +107,19 @@ def count_letters():
             counts[lowercase.index(char)] += 1
     
     letters = sum(counts)
-    frequencies = [100.0 * count / letters for count in counts]
+    freq = [100.0 * count / letters for count in counts]
+    frequencies = [f"{f:.2f}%" for f in freq]
 
-    for i in range(len(uppercase)):
-            print((uppercase[i]), lowercase[i], frequencies[i])
+    for uppercase, frequencies in zip(uppercase, frequencies):
+            print(uppercase, frequencies)
     
-    print(f"Check sum of frequencies: {sum(frequencies):.2f}%")
+    print(f"Check sum of frequencies: {sum(freq):.2f}%")
     
     elapsed_time = time.time() - start_time
     print(f"Elapsed time: {elapsed_time:.2f} seconds")
     
     if args.plot:
-        plot_histogram(frequencies)
+        plot_histogram(freq)
 
 if __name__ == "__main__":  # Replace with the actual file path
     count_letters()
