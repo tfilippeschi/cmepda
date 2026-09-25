@@ -19,16 +19,19 @@ import time
 
 def skip_preamble(text):
 
-    start_marker = "*** START OF THE PROJECT GUTENBERG***"
-    end_marker = "*** END OF THE PROJECT GUTENBERG***"
+    text_lower = text.lower()
+
+    start_marker = "*** start of the project gutenberg"
+    end_marker = "*** end of the project gutenberg"
 
     start = 0
-    pos = text.find(start_marker)
+    pos = text_lower.find(start_marker)
     if pos != -1:
-        start = pos + len(start_marker)
+        nl = text_lower.find("\n", pos)
+        start = nl + 1 if nl != -1 else pos + len(start_marker)
     
     end = len(text)
-    pos = text.find(end_marker)
+    pos = text_lower.find(end_marker)
     if pos != -1:
         end = pos
     
@@ -70,22 +73,23 @@ def count_letters():
 
     with open(args.file_path, 'r', encoding='utf-8') as f:
         text = f.read()
-        if args.skip_preamble:
-            text = skip_preamble(text)
-        if args.stats:
-            lines, words, chars, letters = basic_stats(text)
-            print(f"Lines: {lines}, Words: {words}, Characters: {chars}, Letters: {letters}")
+
+    if args.skip_preamble:
+        text = skip_preamble(text)
+    
+    if args.stats:
+        lines, words, chars, letters = basic_stats(text)
+        print(f"Lines: {lines}, Words: {words}, Characters: {chars}, Letters: {letters}")
     
     uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     lowercase = 'abcdefghijklmnopqrstuvwxyz'
     counts = [0] * len(uppercase)
-
-    for line in text:
-        for char in line:
-            if char in uppercase:
-                counts[uppercase.index(char)] += 1
-            elif char in lowercase:
-                counts[lowercase.index(char)] += 1
+    
+    for char in text:
+        if char in uppercase:
+            counts[uppercase.index(char)] += 1
+        elif char in lowercase:
+            counts[lowercase.index(char)] += 1
     
     letters = sum(counts)
     frequencies = [100.0 * count / letters for count in counts]
