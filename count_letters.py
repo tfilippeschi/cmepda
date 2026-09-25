@@ -18,7 +18,22 @@ from collections import Counter
 import string
 import time
 
-# def skip_preamble(file_path):
+def skip_preamble(file_path):
+
+    start_marker = "*** START OF THE PROJECT GUTENBERG***"
+    end_marker = "*** END OF THE PROJECT GUTENBERG***"
+
+    start = 0
+    pos = text.find(start_marker)
+    if pos != -1:
+        start = pos + len(start_marker)
+    
+    end = len(text)
+    pos = text.find(end_marker)
+    if pos != -1:
+        end = pos
+    
+    return text[start:end]
 
 def basic_stats(file_path):
 
@@ -32,7 +47,16 @@ def basic_stats(file_path):
 
     return num_lines, num_words, num_chars, letters
 
-# def parse_arguments():
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+        description='Count the relative frequency of each letter in a text file.'
+    )
+    parser.add_argument(
+        "file_path",
+        type=str,
+        help="Path to the input text file"
+    )
+    return parser.parse_args()
 
 def count_letters(file_path):
 
@@ -56,4 +80,4 @@ def count_letters(file_path):
             print((uppercase[i]), lowercase[i], frequencies[i])
 
 if __name__ == "__main__":
-    count_letters()
+    count_letters(file_path)
