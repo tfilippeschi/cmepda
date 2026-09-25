@@ -17,6 +17,32 @@ import argparse
 import string
 import time
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+        description='Count the relative frequency of each letter in a text file.'
+    )
+    parser.add_argument(
+        "file_path",
+        type=str,
+        help="Path to the input text file"
+    )
+    parser.add_argument(
+        "--skip-preamble",
+        action="store_true",
+        help="Skip the preamble and license sections of the text"
+    )
+    parser.add_argument(
+        "--stats",
+        action="store_true",
+        help="Print basic statistics of the text"
+    )
+    parser.add_argument(
+        "--plot",
+        action="store_true",
+        help="Plot a histogram of relative frequencies. Requires matplotlib."
+    )
+    return parser.parse_args()
+
 def skip_preamble(text):
 
     text_lower = text.lower()
@@ -46,26 +72,15 @@ def basic_stats(text):
 
     return lines, words, chars, letters
 
-def parse_arguments():
-    parser = argparse.ArgumentParser(
-        description='Count the relative frequency of each letter in a text file.'
-    )
-    parser.add_argument(
-        "file_path",
-        type=str,
-        help="Path to the input text file"
-    )
-    parser.add_argument(
-        "--skip-preamble",
-        action="store_true",
-        help="Skip the preamble and license sections of the text"
-    )
-    parser.add_argument(
-        "--stats",
-        action="store_true",
-        help="Print basic statistics of the text"
-    )
-    return parser.parse_args()
+def plot_histogram(frequencies):
+    import matplotlib.pyplot as plt
+
+    letters = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    plt.bar(letters, frequencies)
+    plt.xlabel('Letters')
+    plt.ylabel('Relative Frequency (%)')
+    plt.title('Letter Frequency Histogram')
+    plt.show()
 
 def count_letters():
     args = parse_arguments()
@@ -101,6 +116,9 @@ def count_letters():
     
     elapsed_time = time.time() - start_time
     print(f"Elapsed time: {elapsed_time:.2f} seconds")
+    
+    if args.plot:
+        plot_histogram(frequencies)
 
 if __name__ == "__main__":  # Replace with the actual file path
     count_letters()
