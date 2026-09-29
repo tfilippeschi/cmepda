@@ -1,0 +1,125 @@
+# --- Goal
+# Write a Python program that prints the relative frequence of each letter
+# of the alphabet (without distinguishing between lower and upper case) in the
+# book.
+
+# --- Specifications
+# - the program should have a --help option summarizing the usage
+# - the program should accept the path to the input file from the command line
+# - the program should print out the total elapsed time
+# - the program should have an option to display a histogram of the frequences
+# - [optional] the program should have an option to skip the parts of the text
+#   that do not pertain to the book (e.g., preamble and license)
+# - [optional] the program should have an option to print out the basic book
+#   stats (e.g., number of characters, number of words, number of lines, etc.)
+
+import argparse
+import string
+import time
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+        description='Count the relative frequency of each letter in a text file.'
+    )
+    parser.add_argument(
+        "file_path",
+        type=str,
+        help="Path to the input text file"
+    )
+    parser.add_argument(
+        "--skip-preamble",
+        action="store_true",
+        help="Skip the preamble and license sections of the text"
+    )
+    parser.add_argument(
+        "--stats",
+        action="store_true",
+        help="Print basic statistics of the text"
+    )
+    parser.add_argument(
+        "--plot",
+        action="store_true",
+        help="Plot a histogram of relative frequencies. Requires matplotlib."
+    )
+    return parser.parse_args()
+
+def skip_preamble(text):
+
+    text_lower = text.lower()
+
+    start_marker = "*** start of the project gutenberg"
+    end_marker = "*** end of the project gutenberg"
+
+    start = 0
+    pos = text_lower.find(start_marker)
+    if pos != -1:
+        nl = text_lower.find("\n", pos)
+        start = nl + 1 if nl != -1 else pos + len(start_marker)
+    
+    end = len(text)
+    pos = text_lower.find(end_marker)
+    if pos != -1:
+        end = pos
+    
+    return text[start:end]
+
+def basic_stats(text):
+
+    lines = len(text.splitlines()) # Total lines
+    words = len(text.split()) # Total words
+    chars = len(text) # Total letters + non-letters
+    letters = sum(1 for c in text if c.isalpha()) # Total letters
+
+    return lines, words, chars, letters
+
+def plot_histogram(frequencies):
+    import matplotlib.pyplot as plt
+
+    letters = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    plt.bar(letters, frequencies)
+    plt.xlabel('Letters')
+    plt.ylabel('Relative Frequency (%)')
+    plt.title('Letter Frequency Histogram')
+    plt.show()
+
+def count_letters():
+    args = parse_arguments()
+    start_time = time.time()
+
+    with open(args.file_path, 'r', encoding='utf-8') as f:
+        text = f.read()
+
+    if args.skip_preamble:
+        text = skip_preamble(text)
+    
+    if args.stats:
+        lines, words, chars, letters = basic_stats(text)
+        print(f"Lines: {lines}, Words: {words}, Characters: {chars}, Letters: {letters}")
+    
+    uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    lowercase = 'abcdefghijklmnopqrstuvwxyz'
+    counts = [0] * len(uppercase)
+    
+    for char in text:
+        if char in uppercase:
+            counts[uppercase.index(char)] += 1
+        elif char in lowercase:
+            counts[lowercase.index(char)] += 1
+    
+    letters = sum(counts)
+    freq = [100.0 * count / letters for count in counts]
+    frequencies = [f"{f:.2f}%" for f in freq]
+
+    for uppercase, frequencies in zip(uppercase, frequencies):
+            print(uppercase, frequencies)
+    
+    print(f"Check sum of frequencies: {sum(freq):.2f}%")
+    
+    elapsed_time = time.time() - start_time
+    print(f"Elapsed time: {elapsed_time:.2f} seconds")
+    
+    if args.plot:
+        plot_histogram(freq)
+
+if __name__ == "__main__":  # Replace with the actual file path
+    count_letters()
