@@ -24,11 +24,11 @@ class Particle:
         return math.sqrt(self._mass**2 + self.momentum**2)
     
     def info(self):
-        return [f"Particle: {self._name}",
-                f"Mass: {self._mass} MeV/c^2",
-                f"Charge: {self._charge} e",
-                f"Momentum: {self.momentum} MeV/c",
-                f"Energy: {self.energy():.3f} MeV"]
+        return f"Particle: {self._name}\n" \
+               f"Mass: {self._mass} MeV/c^2\n" \
+               f"Charge: {self._charge} e\n" \
+               f"Momentum: {self.momentum} MeV/c\n" \
+               f"Energy: {self.energy():.3f} MeV\n"
 
 class Electron(Particle):
     def __init__(self, momentum=0.):
@@ -40,4 +40,5 @@ class Proton(Particle):
 
 if __name__ == "__main__":
     e = Electron(momentum=1.)
+    print(e.info())
     print(f"Energy of {e._name} with momentum {e.momentum} MeV is {e.energy():.3f} MeV")
