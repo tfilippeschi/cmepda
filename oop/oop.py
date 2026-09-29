@@ -11,6 +11,15 @@ class Vector3d:
     def norm(self):
         return np.sqrt((self.x ** 2 + self.y ** 2 + self.z ** 2))
     
+    def r(self):
+        return self.norm()
+    
+    def phi(self):
+        return np.arctan2(self.y, self.x)
+    
+    def theta(self):
+        return np.arccos(self.z / self.norm())
+    
     def dot(self, other: "Vector3d"):
         return self.x * other.x + self.y * other.y + self.z * other.z
     
@@ -25,6 +34,7 @@ class Vector3d:
 if __name__ == "__main__":
     n1 = Vector3d(1., 1., 0.)
     print(n1)
+    print(f"r = {n1.r():.2f}, phi = {n1.phi():.2f}, theta = {n1.theta():.2f}")
     n2 = Vector3d(1., -1., 0.)
     print(n2)
     print(n1.dot(n2))
