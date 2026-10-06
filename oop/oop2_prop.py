@@ -5,6 +5,12 @@ class Vector2d:
         self._r = float(r)
         self._phi = float(phi)
     
+    def __str__(self):
+        return f"Cartesian coordinates: ({self.x}, {self.y})"
+    
+    def __repr__(self):
+        return f"{self.__class__.__name__}(x={self.x}, y={self.y})"
+    
     @property
     def r(self):
         return self._r
@@ -30,6 +36,5 @@ class Vector2d:
 
 v = Vector2d(3., math.pi/2)
 v.x = 5.
-print(v.r)
-print(v.y)
-print(v._phi)
+print(v)
+print(repr(v))
