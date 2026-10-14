@@ -2,15 +2,15 @@ import math
 import numpy as np
 
 class FourVector:
-    def __init__(self, E, px, py, pz):
-        self._E = E
+    def __init__(self, e, px, py, pz):
+        self._e = e
         self._px = px
         self._py = py
         self._pz = pz
     
     @property
-    def E(self):
-        return self._E
+    def e(self):
+        return self._e
     
     @property
     def px(self):
@@ -38,11 +38,11 @@ class FourVector:
     
     @property
     def beta_vec(self):
-        return self.p_vec / self._E
+        return self.p_vec / self._e
     
     def dot(self, other : FourVector):
         return (
-            self._E * other._E
+            self._e * other._e
             - self._px * other._px
             - self._py * other._py
             - self._pz * other._pz
@@ -60,12 +60,12 @@ class FourVector:
         gamma2 = gamma - 1.0
         bp = bx * self._px + by * self._py + bz * self._pz
 
-        E_prime = gamma * (self._E + bp)
-        px_prime = self._px + ((gamma2 / b2) * bp - gamma * self._E)
-        py_prime = self._py + ((gamma2 / b2) * bp - gamma * self._E)
-        pz_prime = self._pz + ((gamma2 / b2) * bp - gamma * self._E)
+        e_prime = gamma * (self._E + bp)
+        px_prime = self._px + ((gamma2 / b2) * bp - gamma * self._e)
+        py_prime = self._py + ((gamma2 / b2) * bp - gamma * self._e)
+        pz_prime = self._pz + ((gamma2 / b2) * bp - gamma * self._e)
 
-        return FourVector(E_prime, px_prime, py_prime, pz_prime)
+        return FourVector(e_prime, px_prime, py_prime, pz_prime)
     
     def boost_to_rest_frame_of(self, parent: FourVector):
 
@@ -79,7 +79,7 @@ class FourVector:
     
     def __add__(self, other: FourVector):
         return FourVector(
-            self._E + other._E,
+            self._e + other._e,
             self._px + other._px,
             self._py + other._py,
             self._pz + other._pz
@@ -87,7 +87,7 @@ class FourVector:
     
     def __sub__(self, other: FourVector):
         return FourVector(
-            self._E - other._E,
+            self._e - other._e,
             self._px - other._px,
             self._py - other._py,
             self._pz - other._pz
@@ -95,7 +95,7 @@ class FourVector:
     
     def __mul__(self, scalar):
         return FourVector(
-            self._E * scalar,
+            self._e * scalar,
             self._px * scalar,
             self._py * scalar,
             self._pz * scalar
@@ -104,4 +104,4 @@ class FourVector:
     __rmul__ = __mul__
 
     def __neg__(self):
-        return FourVector(self._E, -self._px, -self._py, -self._pz)
+        return FourVector(self._e, -self._px, -self._py, -self._pz)
