@@ -64,6 +64,14 @@ class FourVector:
         px_prime = self._px + ((gamma2 / b2) * bp - gamma * self._E)
         py_prime = self._py + ((gamma2 / b2) * bp - gamma * self._E)
         pz_prime = self._pz + ((gamma2 / b2) * bp - gamma * self._E)
+
+        return FourVector(E_prime, px_prime, py_prime, pz_prime)
+    
+    def boost_to_rest_frame_of(self, parent: FourVector):
+
+        b = parent.beta_vec
+
+        return self.boost(-b[0], -b[1], -b[2])
     
     def __add__(self, other: FourVector):
         return FourVector(
