@@ -70,8 +70,12 @@ class FourVector:
     def boost_to_rest_frame_of(self, parent: FourVector):
 
         b = parent.beta_vec
-
         return self.boost(-b[0], -b[1], -b[2])
+    
+    def boost_from_rest_rest_of(self, parent: FourVector):
+
+        b = parent.beta_vec
+        return self.boost(b[0], b[1], b[2])
     
     def __add__(self, other: FourVector):
         return FourVector(
