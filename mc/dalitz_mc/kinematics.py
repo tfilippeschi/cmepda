@@ -64,3 +64,20 @@ def generate_3body_decay(
     e3_star = (m_mother*2 - s12 - m3*2) / (2.0 * m_mother)
     p2_star = math.sqrt(e2_star**2 - m2**2)
     p3_star = math.sqrt(e3_star**2 - m3**2)
+
+    num = (e2_star + e3_star)**2 - s23 - p2_star**2 - p3_star**2
+    costheta_star = num / (2.0 * p2_star * p3_star)
+    costheta_star = np.clip(costheta_star, -1.0, 1.0)
+
+    phi_star = rng.uniform(0.0, 2.0 * math.pi)
+    sintheta_star = math.sqrt(1.0 - costheta_star**2)
+
+    p2_star_x = p2_star * sintheta_star * math.cos(phi_star)
+    p2_star_y = p2_star * sintheta_star * math.sin(phi_star)
+    p2_star_z = p2_star * costheta_star
+    p2_star_vec = FourVector(e2_star, p2_star_x, p2_star_y, p2_star_z)
+
+    e1_star = (s12 + m1**2 - m2**2) / (2.0 * m12)
+    p1_star_vec = FourVector(e1_star, -p2_star_x, -p2_star_y, -p2_star_z)
+
+    return p1, p2, p3
