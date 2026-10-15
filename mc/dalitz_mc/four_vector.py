@@ -60,7 +60,7 @@ class FourVector:
         gamma2 = gamma - 1.0
         bp = bx * self._px + by * self._py + bz * self._pz
 
-        e_prime = gamma * (self._E + bp)
+        e_prime = gamma * (self._e + bp)
         px_prime = self._px + ((gamma2 / b2) * bp - gamma * self._e)
         py_prime = self._py + ((gamma2 / b2) * bp - gamma * self._e)
         pz_prime = self._pz + ((gamma2 / b2) * bp - gamma * self._e)
