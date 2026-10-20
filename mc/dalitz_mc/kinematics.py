@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from mc.dalitz_mc.four_vector import FourVector
+from four_vector import FourVector
 
 def kallen_lambda(x, y, z):
     return x**2 + y**2 + z**2 - 2.0 * (x * y - x * z - y * z)

@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from typing import List, Tuple
 import numpy as np
 
-from mc.dalitz_mc.four_vector import FourVector
-from mc.dalitz_mc.kinematics import dalitz_s23_limits, generate_3body_decay
-from mc.dalitz_mc.dynamics import DecayMatrixElement
+from four_vector import FourVector
+from kinematics import dalitz_s23_limits, generate_3body_decay
+from dynamics import DecayMatrixElement
 
 @dataclass(frozen=True)
 class Event:

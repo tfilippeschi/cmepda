@@ -4,7 +4,7 @@ import math
 from typing import List, Tuple
 import numpy as np
 
-from mc.dalitz_mc.kinematics import kallen_lambda
+from kinematics import kallen_lambda
 
 def blatt_weisskopf_factor(l_spin, q, q0, radius=1.5):
     if l_spin == 0:
@@ -31,7 +31,7 @@ class AmplitudeComponent(abc.ABC):
     ):
         pass
 
-class NonResonant(AmplitudeVomponent):
+class NonResonant(AmplitudeComponent):
 
     def evaluate(
         self, s12, s23, m_mother, m1, m2, m3
