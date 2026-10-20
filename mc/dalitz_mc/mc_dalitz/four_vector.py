@@ -12,7 +12,7 @@ class FourVector:
     Natural units (c = 1).
     """
 
-    __slots__("_e", "_px", "_py", "_pz")
+    __slots__ = ("_e", "_px", "_py", "_pz")
 
     def __init__(self, e: float, px: float, py: float, pz: float):
         self._e = float(e)
@@ -54,23 +54,23 @@ class FourVector:
         return self._px**2 + self._py**2 + self._pz**2
     
     @property
-    def p_spatial(self):
+    def p_spatial(self) -> float:
         """Modulus of spatial momentum."""
         return math.sqrt(self.p2_spatial)
     
     @property
-    def pt(self):
+    def pt(self) -> float:
         """Transverse momentum."""
         return math.hypot(self._px, self._py)
     
     @property
-    def beta_vec(self):
+    def beta_vec(self) -> np.darray:
         """Velocity vector beta = v / c = p / E."""
         if self._e == 0.0:
             raise ValueError("Null energy: cannot compute beta vector.")
         return self.p_vec / self._e
     
-    def dot(self, other : FourVector):
+    def dot(self, other : FourVector) -> float:
         """Lorentz scalar product p . q = E_p * E_q - vec(p) . vec(q)."""
         return (
             self._e * other._e
@@ -79,27 +79,27 @@ class FourVector:
             - self._pz * other._pz
             )
     
-    def m2(self):
+    def m2(self) -> float:
         """Square invariant mass: m^2 = E^2 - |p|^2"""
         return self.dot(self)
     
-    def m(self):
+    def m(self) -> float:
         "Invariant mass. Numerical tollerance around zero."
-        val = self.m2
+        val = self.m2()
         if val < 0.0:
-            if val < -1e-12:
+            if val > -1e-12:
                 return 0.0
             raise ValueError(
                 f"m^2 = {val:.4e} < 0 : mass not defined."
             )
-        return math.sqrt(self.m2)
+        return math.sqrt(val)
     
     def boost(self, bx: float, by: float, bz: float) -> FourVector:
         """Applies Lorentz boost with velocity (bx, by, bz)."""
         b2 = bx**2 + by**2 + bz**2
         if b2 == 0.0:
             return FourVector(self._e, self._px, self._py, self._pz)
-        if b2 > 1.0:
+        if b2 >= 1.0:
             raise ValueError(f"beta cannot be > 1.0.")
         
         gamma = 1.0 / math.sqrt(1.0 - b2)
@@ -107,9 +107,9 @@ class FourVector:
         gamma2 = (gamma - 1.0) / b2
 
         e_prime = gamma * (self._e + bp)
-        px_prime = self._px + (gamma2 * bp - gamma * self._e) * bx
-        py_prime = self._py + (gamma2 * bp - gamma * self._e) * by
-        pz_prime = self._pz + (gamma2 * bp - gamma * self._e) * bz
+        px_prime = self._px + (gamma2 * bp + gamma * self._e) * bx
+        py_prime = self._py + (gamma2 * bp + gamma * self._e) * by
+        pz_prime = self._pz + (gamma2 * bp + gamma * self._e) * bz
 
         return FourVector(e_prime, px_prime, py_prime, pz_prime)
     
@@ -118,7 +118,7 @@ class FourVector:
         b = parent.beta_vec
         return self.boost(-b[0], -b[1], -b[2])
     
-    def boost_from_rest_rest_of(self, parent: FourVector) -> FourVector:
+    def boost_from_rest_frame_of(self, parent: FourVector) -> FourVector:
         """Transforms this 4-vector from the rest frame of 'parent' to lab."""
         b = parent.beta_vec
         return self.boost(b[0], b[1], b[2])
