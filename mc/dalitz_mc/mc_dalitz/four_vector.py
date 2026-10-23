@@ -44,7 +44,7 @@ class FourVector:
         return self._pz
     
     @property
-    def p_vec(self) -> np.darray:
+    def p_vec(self) -> np.ndarray:
         """Spatial momentum 3-D vector."""
         return np.array([self._px, self._py, self._pz], dtype=np.float64)
     
@@ -64,7 +64,7 @@ class FourVector:
         return math.hypot(self._px, self._py)
     
     @property
-    def beta_vec(self) -> np.darray:
+    def beta_vec(self) -> np.ndarray:
         """Velocity vector beta = v / c = p / E."""
         if self._e == 0.0:
             raise ValueError("Null energy: cannot compute beta vector.")

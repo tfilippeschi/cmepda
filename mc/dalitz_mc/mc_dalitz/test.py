@@ -1,6 +1,9 @@
 import pytest
 import math
+import numpy as np
+
 from four_vector import FourVector
+from kinematics import dalitz_s23_limits, generate_3body_decay
 
 # four_vector tests
 
@@ -34,3 +37,32 @@ def test_mandelstam_s_addition():
     s = p_tot.m2()
     assert math.isclose(s, 100.0, rel_tol=1e-9)
     assert math.isclose(p_tot.p_spatial, 0.0, abs_tol=1e-12)
+
+# kinematics tests
+
+def test_conservation_and_invariants():
+    rng = np.random.default_rng(seed=42)
+    m_d0 = 1.8648
+    m_k = 0.4937
+    m_pip = 0.1396
+    m_pi0 = 0.1350
+
+    s12_min = (m_k + m_pip)**2
+    s12_max = (m_d0 - m_pi0)**2
+
+    s12_val = (s12_min + s12_max) / 2.0
+    s23_min, s23_max = dalitz_s23_limits(s12_val, m_d0, m_k, m_pip, m_pi0)
+    s23_val = (s23_min + s23_max) / 2.0
+
+    p1, p2, p3 = generate_3body_decay(m_d0, m_k, m_pip, m_pi0, s12_val, s23_val, rng)
+
+    p_tot = p1 + p2 + p3
+    assert np.isclose(p_tot.m(), m_d0, atol=1e-6)
+    assert np.isclose(p_tot.p_spatial, 0.0, atol=1e-6)
+
+    assert np.isclose(p1.m(), m_k, atol=1e-5)
+    assert np.isclose(p2.m(), m_pip, atol=1e-5)
+    assert np.isclose(p3.m(), m_pi0, atol=1e-5)
+
+    assert np.isclose((p1 + p2).m2(), s12_val, atol=1e-5)
+    assert np.isclose((p2 + p3).m2(), s23_val, atol=1e-5)
