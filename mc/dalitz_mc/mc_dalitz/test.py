@@ -4,6 +4,7 @@ import numpy as np
 
 from four_vector import FourVector
 from kinematics import dalitz_s23_limits, generate_3body_decay
+from dynamics import DecayMatrixElement, NonResonant, RelativisticBreitWigner
 
 # four_vector tests
 
@@ -66,3 +67,26 @@ def test_conservation_and_invariants():
 
     assert np.isclose((p1 + p2).m2(), s12_val, atol=1e-5)
     assert np.isclose((p2 + p3).m2(), s23_val, atol=1e-5)
+
+# dynamics tests
+
+nr = NonResonant(amplitude=0.3, phase_rad=0.0)
+rho = RelativisticBreitWigner(
+    m0=0.775, gamma0=0.149, spin=1, channel="23", amplitude=1.0, phase_rad=1.2
+)
+k_star = RelativisticBreitWigner(
+    m0=0.892, gamma0=0.050, spin=1, channel="12", amplitude=0.8, phase_rad=-0.5
+)
+
+matrix_elem = DecayMatrixElement(
+    m_mother=1.8648,
+    m1=0.4937,   # K-
+    m2=0.1396,   # pi+
+    m3=0.1350,   # pi0
+    components=[nr, rho, k_star]
+)
+
+# Valutazione in un punto dello spazio delle fasi
+prob = matrix_elem.prob_density(s12=0.892**2, s23=0.775**2)
+assert prob > 0.0
+print(f"|M|^2 nel punto di quasi-intersezione dei picchi: {prob:.4e}")
