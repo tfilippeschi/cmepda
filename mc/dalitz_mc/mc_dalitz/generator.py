@@ -43,8 +43,11 @@ class DalitzMonteCarlo:
 
         self.s_sum = self.M**2 + self.m1**2 + self.m2**2 + self.m3**2
         self._max_weight = self._estimate_max_weight()
+    
+    def _weights(self, s12: np.ndarray, s23: np.ndarray, delta_s23: np.ndarray) -> np.ndarray:
+        return delta_s23 * self.me.prob_density_array(s12, s23)
 
-    def _estimate_max_weight(self, n_grid: int = 300) -> float:
+    def _estimate_max_weight(self, n_grid: int = 800, safety: float = 1.25) -> float:
         """Estimates maximum weight across the Dalitz plot."""
         s12_vals = np.linspace(self.s12_min + 1e-5, self.s12_max - 1e-5, n_grid)
         max_w = 0.0

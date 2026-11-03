@@ -41,6 +41,20 @@ class AmplitudeComponent(abc.ABC):
         """Evaluate amplitude term for a (s12, s23) point."""
         pass
 
+    def evaluate_array(
+        self, s12: np.ndarray, s23: np.ndarray, m_mother: float,
+        m1: float, m2: float, m3: float
+    ) -> np.ndarray:
+        """Vectorized evaluation. Default: slow fallback over 'evaluate'.
+        
+        Subclasses should ovverride this with a true NumPy implementation."""
+
+        out = np.empty(np.shape(s12), dtyper=np.complex128)
+        flat = out.ravel()
+        for i, (a, b) in enumerate(zip(np.ravel(s12), np.ravel(s23))):
+            flat[i] = self.evaluate(float(a), float(b), m_mother, m1, m2, m3)
+        return out
+
 class NonResonant(AmplitudeComponent):
     """Non-resonant term (uniform phase space)."""
 
@@ -48,6 +62,9 @@ class NonResonant(AmplitudeComponent):
         self, s12: float, s23: float, m_mother: float, m1: float, m2: float, m3: float
     ) -> complex:
         return self.complex_coupling
+    
+    def evaluate_array(self, s12, s23, m_mother, m1, m2, m3) -> np.ndarray:
+        return np.full(np.shape(s12), self.complex_coupling, dtype=np.complex128)
 
 class RelativisticBreitWigner(AmplitudeComponent):
     """Resonance with relativistic Breit-Wigner and angular dependence.
@@ -89,7 +106,8 @@ class RelativisticBreitWigner(AmplitudeComponent):
             return s23, m2, m3, m1, s13
         else:
             return s13, m1, m3, m2, s23
-        
+    
+     # ------------------------------------------------------------------ scalar    
     def evaluate(
         self, s12: float, s23: float, m_mother: float,
         m1: float, m2: float, m3: float
@@ -134,6 +152,51 @@ class RelativisticBreitWigner(AmplitudeComponent):
                 angular_factor = 0.0
         
         return self.complex_coupling * bw_prop * angular_factor
+    
+     # ------------------------------------------------------------------ vectorized
+    def evaluate_array(
+        self, s12: np.ndarray, s23: np.ndarray, m_mother: float,
+        m1: float, m2: float, m3: float
+    ) -> np.ndarray:
+        s, ma, mb, mc, s_bc = self._get_channel_kinematics(
+            s12, s23, m_mother, m1, m2, m3)
+ 
+        above = s > (ma + mb) ** 2
+        # Below threshold, substitute a harmless value and zero the result at the end
+        s_ok = np.where(above, s, self.m0**2)
+        m_inv = np.sqrt(s_ok)
+ 
+        q = np.sqrt(np.maximum(0.0, kallen_lambda(s_ok, ma**2, mb**2))) / (2.0 * m_inv)
+ 
+        lam0 = kallen_lambda(self.m0**2, ma**2, mb**2)
+        q0 = math.sqrt(max(0.0, lam0)) / (2.0 * self.m0) if lam0 > 0.0 else 1e-6
+ 
+        ff = blatt_weisskopf_factor(self.spin, q, q0, self.meson_radius)
+ 
+        gamma_s = (
+            self.gamma0
+            * (self.m0 / m_inv)
+            * ((q / q0) ** (2 * self.spin + 1))
+            * ff**2
+        )
+ 
+        bw_prop = 1.0 / ((self.m0**2 - s_ok) - 1j * self.m0 * gamma_s)
+ 
+        if self.spin == 1:
+            eb = (s_ok - ma**2 + mb**2) / (2.0 * m_inv)
+            ec = (m_mother**2 - s_ok - mc**2) / (2.0 * m_inv)
+            lam_mother = kallen_lambda(m_mother**2, s_ok, mc**2)
+            p_spec = np.sqrt(np.maximum(0.0, lam_mother)) / (2.0 * m_inv)
+ 
+            qp = q * p_spec
+            good = qp > 0.0
+            cos_hel = (s_bc - mb**2 - mc**2 - 2.0 * eb * ec) / (2.0 * np.where(good, qp, 1.0))
+            angular = np.where(good, np.clip(cos_hel, -1.0, 1.0), 0.0)
+        else:
+            angular = 1.0
+ 
+        return np.where(above, self.complex_coupling * bw_prop * angular, 0.0j)
+ 
 
 class DecayMatrixElement:
     """Manages the coherent sum of amplitudes and calculation of |M|^2."""
@@ -150,6 +213,7 @@ class DecayMatrixElement:
         self.m3 = m3
         self.components = components
     
+    #scalar
     def amplitude(self, s12: float, s23: float) -> complex:
         """Calculates the sum sum_i M_i(s12, s23)."""
         tot = 0.0j
@@ -162,4 +226,19 @@ class DecayMatrixElement:
     def prob_density(self, s12: float, s23: float) -> float:
         """Calculates |M|^2."""
         amp=self.amplitude(s12, s23)
+        return amp.real**2 + amp.imag**2
+    
+    # vectorized
+    def amplitude_array(self, s12: np.ndarray, s23: np.ndarray) -> np.ndarray:
+        """Coherent sum of all components for arrays of (s12, s23)."""
+        tot = np.zeros(np.shape(s12), dtype=np.complex128)
+        for comp in self.components:
+            tot += comp.evaluate_array(
+                s12, s23, self.m_mother, self.m1, self.m2, self.m3
+            )
+        return tot
+ 
+    def prob_density_array(self, s12: np.ndarray, s23: np.ndarray) -> np.ndarray:
+        """|M|^2 for arrays of (s12, s23)."""
+        amp = self.amplitude_array(s12, s23)
         return amp.real**2 + amp.imag**2
