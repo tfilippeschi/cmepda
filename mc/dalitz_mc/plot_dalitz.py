@@ -19,6 +19,10 @@ def parse_args() -> argparse.Namespace:
         help="Nome del file grafico di output (default: dalitz_plot.png)."
     )
     parser.add_argument(
+        "--show", action="store_true",
+        help="Forza l'apertura della finestra interattiva anche se è specificato --output-plot."
+    )
+    parser.add_argument(
         "--bins", type=int, default=120,
         help="Numero di bin per asse negli istogrammi (default: 120)."
     )
@@ -63,7 +67,7 @@ def main() -> None:
     bound_s12, bound_s23 = calculate_kinematic_boundary(m_mother, m1, m2, m3)
 
     # Setup figura (layout 2x2)
-    fig, axes = plt.subplots(2, 2, figsize=(14, 12), constrained_layout=True)
+    fig, axes = plt.subplots(2, 2, figsize=(14, 12), layout="constrained")
 
     # 1. Dalitz Plot 2D (s23 vs s12)
     ax_dalitz = axes[0, 0]
@@ -101,8 +105,17 @@ def main() -> None:
     ax_m13.set_title(r"Distribuzione $m(K^-\pi^0)$ - Picco $K^*(892)^-$", fontsize=13)
     ax_m13.grid(True, linestyle="--", alpha=0.5)
 
-    plt.savefig(args.output_plot, dpi=300)
-    print(f"Grafico salvato con successo: {args.output_plot}")
+    # plt.tight_layout()
+
+    # Optional save
+    if args.output_plot:
+        plt.savefig(args.output_plot, dpi=300)
+        print(f"Grafico salvato in: {args.output_plot}")
+
+    # Interactive mode (default)
+    if not args.output_plot or args.show:
+        print("Apertura finestra interattiva (premi 'q' o chiudi la finestra per uscire)...")
+        plt.show()
 
 
 if __name__ == "__main__":
