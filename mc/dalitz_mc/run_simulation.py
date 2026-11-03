@@ -97,15 +97,13 @@ def main() -> None:
 
     print(f"Generazione di {args.nevents:,} eventi in corso...")
     t1 = time.perf_counter()
-    events, efficiency = mc.generate(args.nevents)
+    data_dict, efficiency = mc.generate(args.nevents)
     t_gen = time.perf_counter() - t1
 
     print(f"Generazione conclusa in {t_gen:.2f} s.")
     print(f"Velocità: {args.nevents / t_gen:.1f} eventi/s")
     print(f"Efficienza di rigetto (hit/trials): {efficiency * 100:.2f}%")
 
-    # Conversione e salvataggio compresso
-    data_dict = mc.to_numpy(events)
     # Salviamo anche i parametri fisici come metadati
     data_dict["metadata"] = np.array([args.m_mother, args.m1, args.m2, args.m3])
 

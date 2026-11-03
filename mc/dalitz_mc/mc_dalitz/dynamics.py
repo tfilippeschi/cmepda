@@ -9,16 +9,16 @@ import numpy as np
 
 from mc_dalitz.kinematics import kallen_lambda
 
-def blatt_weisskopf_factor(l_spin: int, q: float, q0: float, radius: float = 1.5) -> float:
+def blatt_weisskopf_factor(l_spin: int, q, q0: float, radius: float = 1.5):
     """Calcola il rapporto F_L(q)/F_L(q0)."""
     if l_spin == 0:
-        return 1.0
+        return 1.0 if np.isscalar(q) else np.ones_like(q, dtype=np.float64)
     z = (q * radius) ** 2
     z0 = (q0 * radius) ** 2
     if l_spin == 1:
-        return math.sqrt((1.0 + z0) / (1.0 + z))
+        return np.sqrt((1.0 + z0) / (1.0 + z))
     if l_spin == 2:
-        return math.sqrt(((z0 - 3.0) ** 2 + 9.0 * z0) / ((z - 3.0) ** 2 + 9.0 * z))
+        return np.sqrt(((z0 - 3.0) ** 2 + 9.0 * z0) / ((z - 3.0) ** 2 + 9.0 * z))
     raise NotImplementedError(f"Spin L={l_spin} not supported")
 
 class AmplitudeComponent(abc.ABC):

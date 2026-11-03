@@ -7,7 +7,7 @@ import time
 import numpy as np
 
 from mc_dalitz.four_vector import FourVector
-from mc_dalitz.kinematics import dalitz_s23_limits, generate_3body_decay
+from mc_dalitz.kinematics import dalitz_s23_limits_array, generate_3body_decay_array
 from mc_dalitz.dynamics import DecayMatrixElement
 
 
