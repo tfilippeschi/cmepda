@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Script for execution of simulation of Monte Carlo Dalitz."""
 
 from __future__ import annotations
 import argparse
@@ -6,8 +7,8 @@ import sys
 import time
 import numpy as np
 
-from dynamics import DecayMatrixElement, NonResonant, RelativisticBreitWigner
-from generator import DalitzMonteCarlo
+from mc_dalitz.dynamics import DecayMatrixElement, NonResonant, RelativisticBreitWigner
+from mc_dalitz.generator import DalitzMonteCarlo
 
 
 def parse_args() -> argparse.Namespace:

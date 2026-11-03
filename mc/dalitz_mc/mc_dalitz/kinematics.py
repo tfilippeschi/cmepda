@@ -5,7 +5,7 @@ import math
 from typing import Tuple
 import numpy as np
 
-from four_vector import FourVector
+from mc_dalitz.four_vector import FourVector
 
 def kallen_lambda(x: float, y: float, z: float) -> float:
     """lambda(x, y, z) = x^2 + y^2 + z^2 - 2xy -2xz - 2yz."""
@@ -34,8 +34,8 @@ def dalitz_s23_limits(
     e2_star = (s12_clamped - m1**2 + m2**2) / (2.0 * m12)
     e3_star = (m_mother**2 - s12_clamped - m3**2) / (2.0 * m12)
 
-    p2_star = two_body_momentum(m12, m1, m2)
-    p3_star = two_body_momentum(m_mother, m12, m3)
+    p2_star = math.sqrt(max(0.0, e2_star**2 - m2**2))
+    p3_star = math.sqrt(max(0.0, e3_star**2 - m3**2))
 
     term_e = (e2_star + e3_star)**2
     s23_min = term_e - (p2_star + p3_star)**2
@@ -85,15 +85,12 @@ def generate_3body_decay(
     p3_cm_mag = two_body_momentum(m_mother, m12, m3)
     p2_star = two_body_momentum(m12, m1, m2)
 
-    e2_star = (s12 - m1**2 + m2**2) / (2.0 * m12)
+    e2_star = (s12_clamped - m1**2 + m2**2) / (2.0 * m12)
     e3_star = (m_mother**2 - s12_clamped - m3**2) / (2.0 * m12)
-    p3_star = p3_cm_mag * (m_mother / m12)
+    p3_star = math.sqrt(max(0.0, e3_star**2 - m3**2))
 
-    if p2_star * p3_star == 0.0:
-        costheta_star = 0.0
-    else:
-        num = (e2_star + e3_star)**2 - s23 - p2_star**2 - p3_star**2
-        costheta_star = float(np.clip(num / (2.0 * p2_star * p3_star), -1.0, 1.0))
+    num = (e2_star + e3_star)**2 - s23 - p2_star**2 - p3_star**2
+    costheta_star = float(np.clip(num / (2.0 * p2_star * p3_star), -1.0, 1.0))
     
     sintheta_star = math.sqrt(max(0.0, 1.0 - costheta_star**2))
     phi_star = rng.uniform(0.0, 2.0 * math.pi)

@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from dalitz_mc.kinematics import dalitz_s23_limits
+from mc_dalitz.kinematics import dalitz_s23_limits
 
 
 def parse_args() -> argparse.Namespace:
@@ -29,8 +29,8 @@ def calculate_kinematic_boundary(
     m_mother: float, m1: float, m2: float, m3: float, n_points: int = 1000
 ) -> tuple[np.ndarray, np.ndarray]:
     """Costruisce il contorno cinematico chiuso (s12, s23) dello spazio delle fasi."""
-    s12_min = (m1 + m2) ** 2 + 1e-6
-    s12_max = (m_mother - m3) ** 2 - 1e-6
+    s12_min = (m1 + m2) ** 2 + 1e-7
+    s12_max = (m_mother - m3) ** 2 - 1e-7
 
     s12_vals = np.linspace(s12_min, s12_max, n_points)
     s23_lower = np.empty(n_points)
