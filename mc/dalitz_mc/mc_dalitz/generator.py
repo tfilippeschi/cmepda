@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import Dict, List, Tuple
+from concurrent.futures import ProcessPoolExecutor
+import os
 import time
 import numpy as np
 
@@ -13,7 +15,10 @@ from mc_dalitz.dynamics import DecayMatrixElement
 
 @dataclass(frozen=True)
 class Event:
-    """Representation of a 3-body decay event."""
+    """Representation of a 3-body decay event.
+    This class became obsolete after implementation of vectorization.
+    Could still be used for event-by-event analysis.
+    """
     s12: float
     s23: float
     s13: float
@@ -21,17 +26,33 @@ class Event:
     p2: FourVector
     p3: FourVector
 
+def _worker_generate(args):
+    """Runs one independent generator in a worker process."""
+    matrix_element, max_weight, seed_seq, n_events, chunk_size = args
+    mc = DalitzMonteCarlo(matrix_element, seed=seed_seq, max_weight=max_weight)
+    data, eff = mc.generate(n_events, chunk_size=chunk_size, verbose=False)
+    return data, eff
 
 class DalitzMonteCarlo:
-    """Monte Carlo generator for 3-body phase space using chunked rejection sampling."""
+    """Monte Carlo generator for 3-body phase space (hit-or-miss, fully vectorized).
+ 
+    Sampling scheme: s12 ~ U(s12_min, s12_max); s23 ~ U(s23_min(s12), s23_max(s12)).
+    The proposal density is 1 / (Delta s12 * Delta s23(s12)), so a point is accepted
+    with probability  Delta s23(s12) * |M|^2 / max_weight  (flat in the Dalitz plane
+    when |M|^2 = const).
+    """
 
     def __init__(
         self,
         matrix_element: DecayMatrixElement,
-        seed: int | None = None,
+        seed: int | np.random.SeedSequence | None = None,
+        max_weight: float | None = None
     ):
         self.me = matrix_element
-        self.rng = np.random.default_rng(seed)
+        self._seed_seq = (
+            seed if isinstance(seed, np.random.SeedSequence) else np.random.SeedSequence(seed)
+        )
+        self.rng = np.random.default_rng(self._seed_seq)
 
         self.M = self.me.m_mother
         self.m1 = self.me.m1
@@ -42,7 +63,9 @@ class DalitzMonteCarlo:
         self.s12_max = (self.M - self.m3) ** 2
 
         self.s_sum = self.M**2 + self.m1**2 + self.m2**2 + self.m3**2
-        self._max_weight = self._estimate_max_weight()
+        self._max_weight = (
+            max_weight if max_weight is not None else self._estimate_max_weight()
+        )
     
     def _weights(self, s12: np.ndarray, s23: np.ndarray, delta_s23: np.ndarray) -> np.ndarray:
         return delta_s23 * self.me.prob_density_array(s12, s23)
@@ -68,7 +91,11 @@ class DalitzMonteCarlo:
     def generate(
         self, n_events: int, chunk_size: int = 200_000, verbose: bool = True
     ) -> Tuple[Dict[str, np.ndarray], float]:
-        """Generates n_events using vectorized batch sampling with live feedback."""
+        """Generates n_events using vectorized batch sampling with live feedback.
+        
+        Returns (data, efficiency) where `data` is a dict of NumPy arrays:
+        s12, s23, s13 with shape (n,), and p1, p2, p3 with shape (n, 4) = (E, px, py, pz).
+        """
         t_start = time.perf_counter()
         last_log = t_start
  
@@ -132,4 +159,51 @@ class DalitzMonteCarlo:
             "p2": p2,
             "p3": p3,
         }
+        return data, efficiency
+    
+    def generate_parallel(
+        self,
+        n_events: int,
+        n_workers: int | None = None,
+        chunk_size: int = 200_000,
+        verbose: bool = True,
+    ) -> Tuple[Dict[str, np.ndarray], float]:
+        """Same output as `generate`, using several processes.
+ 
+        Each worker runs an independent generator (own RNG stream spawned from the
+        master seed, same max_weight) on its share of the events; results are then
+        concatenated. For a given (seed, n_workers) the output is reproducible, but
+        it differs from the serial output and from other values of n_workers.
+        Only worth it for large n_events (millions): each process costs ~1 s to start.
+        """
+        n_workers = n_workers or os.cpu_count() or 1
+        n_workers = max(1, min(n_workers, n_events))
+        if n_workers == 1:
+            return self.generate(n_events, chunk_size=chunk_size, verbose=verbose)
+ 
+        t_start = time.perf_counter()
+        seeds = self._seed_seq.spawn(n_workers)
+        shares = [n_events // n_workers + (1 if i < n_events % n_workers else 0)
+                  for i in range(n_workers)]
+        jobs = [
+            (self.me, self._max_weight, seeds[i], shares[i], chunk_size)
+            for i in range(n_workers)
+        ]
+        if verbose:
+            print(f"Generazione parallela: {n_events:,} eventi su {n_workers} processi...")
+ 
+        with ProcessPoolExecutor(max_workers=n_workers) as pool:
+            results = list(pool.map(_worker_generate, jobs))
+ 
+        data = {
+            key: np.concatenate([r[0][key] for r in results])
+            for key in results[0][0]
+        }
+        # overall efficiency = total accepted / total trials
+        efficiency = n_events / sum(n / r[1] for n, r in zip(shares, results))
+ 
+        if verbose:
+            elapsed = time.perf_counter() - t_start
+            print(f"Completato in {elapsed:.2f} s | Rate: {n_events / elapsed:.0f} ev/s "
+                  f"| Eff: {efficiency * 100:.2f}%")
         return data, efficiency
