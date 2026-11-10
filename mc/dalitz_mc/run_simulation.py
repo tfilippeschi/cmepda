@@ -20,8 +20,8 @@ def parse_args() -> argparse.Namespace:
         help="Number of events (default: 100000)."
     )
     parser.add_argument(
-        "-o", "--output", type=str, default="dalitz_events.npz",
-        help="Path of output file NumPy .npz (default: dalitz_events.npz)."
+        "-o", "--output", type=str, default="datasets/dalitz_events.npz",
+        help="Path of output file NumPy .npz (default: datasets/dalitz_events.npz)."
     )
     parser.add_argument(
         "--seed", type=int, default=1337,
