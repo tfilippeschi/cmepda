@@ -1,4 +1,4 @@
-"""Tests for the vectorized generator (run with: pytest test_vectorized.py)."""
+"""Tests for the vectorized generator (run with: python -m  pytest)."""
 import numpy as np
 import pytest
 
