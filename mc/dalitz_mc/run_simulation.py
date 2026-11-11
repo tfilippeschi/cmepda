@@ -102,7 +102,7 @@ def main() -> None:
 
     print(f"Generazione di {args.nevents:,} eventi in corso...")
     t1 = time.perf_counter()
-    if arg.workers == 1:
+    if args.workers == 1:
         data_dict, efficiency = mc.generate(args.nevents)
     else:
         data_dict, efficiency = mc.generate_parallel(
