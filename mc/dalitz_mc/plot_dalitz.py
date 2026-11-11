@@ -11,12 +11,12 @@ from mc_dalitz.kinematics import dalitz_s23_limits
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Plotting e analisi dei dati Dalitz.")
     parser.add_argument(
-        "-i", "--input", type=str, default="dalitz_events.npz",
-        help="Percorso del file .npz generato (default: dalitz_events.npz)."
+        "-i", "--input", type=str, default="datasets/dalitz_events.npz",
+        help="Percorso del file .npz generato (default: datasets/dalitz_events.npz)."
     )
     parser.add_argument(
-        "-o", "--output-plot", type=str, default="dalitz_plot.png",
-        help="Nome del file grafico di output (default: dalitz_plot.png)."
+        "-o", "--output-plot", type=str, default="pics/dalitz_plot.png",
+        help="Nome del file grafico di output (default: pics/dalitz_plot.png)."
     )
     parser.add_argument(
         "--show", action="store_true",

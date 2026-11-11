@@ -20,12 +20,17 @@ def parse_args() -> argparse.Namespace:
         help="Number of events (default: 100000)."
     )
     parser.add_argument(
-        "-o", "--output", type=str, default="dalitz_events.npz",
-        help="Path of output file NumPy .npz (default: dalitz_events.npz)."
+        "-o", "--output", type=str, default="datasets/dalitz_events.npz",
+        help="Path of output file NumPy .npz (default: datasets/dalitz_events.npz)."
     )
     parser.add_argument(
         "--seed", type=int, default=1337,
         help="Seed for generator(default: 1337)."
+    )
+    parser.add_argument(
+        "-w", "--workers", type=int, default=1,
+        help="Number of processes (default: 1 = serial; 0 = all CPU cores). "
+             "Useful only for millions of events."
     )
     parser.add_argument(
         "--pure-phase-space", action="store_true",
@@ -97,7 +102,12 @@ def main() -> None:
 
     print(f"Generazione di {args.nevents:,} eventi in corso...")
     t1 = time.perf_counter()
-    data_dict, efficiency = mc.generate(args.nevents)
+    if args.workers == 1:
+        data_dict, efficiency = mc.generate(args.nevents)
+    else:
+        data_dict, efficiency = mc.generate_parallel(
+            args.nevents, n_workers=(args.workers or None)
+        )
     t_gen = time.perf_counter() - t1
 
     print(f"Generazione conclusa in {t_gen:.2f} s.")
